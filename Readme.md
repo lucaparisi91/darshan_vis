@@ -26,3 +26,9 @@ sudo podman exec io-control-plane crictl images | grep hello
 ```
 
 See the output with  `kubectl logs <podname>` . This is possible as long as the pod was not previously destroyed.
+
+```bash
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm install --values values-loky.yaml loki grafana/loki
+```
