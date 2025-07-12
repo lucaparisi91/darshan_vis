@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello-world-job
+  labels:
+    app: hello-world
+spec:
+  completions: 1
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      name: hello-container
+    spec:
+      containers:
+        - name: hello-container
+          image: localhost/hello:latest
+          imagePullPolicy: Never
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128M
+            limits:
+              cpu: 500m
+              memory: 256M
+      restartPolicy: Never
