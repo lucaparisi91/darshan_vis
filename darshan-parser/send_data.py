@@ -2,6 +2,9 @@ import requests
 import os
 import time
 from datetime import datetime
+import parserlogs
+
+logger = parserlogs.logging.getLogger(__name__)
 
 class InfluxDBClient:
     """
@@ -24,16 +27,22 @@ class InfluxDBClient:
         self.influx_org = influx_org 
         self.influx_token = influx_token 
         self.bucket = bucket
+        logger.info(f"Created connection to InfluxDB with the following parameters:")
+        logger.info(f"Influx Host: {self.influx_host}")
+        logger.info(f"Organization: {self.influx_org}")
+        logger.info(f"Bucket: {self.bucket}")
 
-    def send_trace_data(self, module : str, filename : str, size : int, duration : int):
+    def send(self, records : dict):
         """
         Send trace data to InfluxDB equivalent to the curl command in send_data.sh
         
         Args:
-            module : Module name for the trace
-            filename : Filename being traced
-            size : File size
-            duration : Operation duration
+            records : Dictionary containing trace data. Each record should contain:
+            - module : Module name for the trace
+            - filename : Filename being traced
+            - size : File size
+            - duration : Operation duration
+            - start : Start time in milliseconds since epoch
 
         Returns:
             requests.Response or None: Response object if successful, None if failed
@@ -55,9 +64,9 @@ class InfluxDBClient:
             'Accept': 'application/json'
         }
         
-        # Create the data payload with current timestamp
-        current_timestamp = int(time.time())  # Equivalent to $(date +%s)
-        data = f'trace,module={module} filename="{filename}",size={size},duration={duration} {current_timestamp}'
+        data=""
+        for record in records:
+            data += f'trace,module={record["module"]} filename="{record["filename"]}",size={record["size"]},duration={record["duration"]} {record["start"]}\n'
         
         try:
             # Make the POST request
@@ -70,18 +79,18 @@ class InfluxDBClient:
             
             # Check the response
             response.raise_for_status()  # Raises an exception for bad status codes
-            
-            print(f"Data sent successfully!")
-            print(f"Status code: {response.status_code}")
-            print(f"Response: {response.text}")
-            
+
+            logger.debug(f"Data sent successfully!")
+            logger.debug(f"Status code: {response.status_code}")
+            logger.debug(f"N records sent: {len(records)}")
+
             return response
-            
+        
         except requests.exceptions.RequestException as e:
-            print(f"Error sending data: {e}")
+            logger.error(f"Error sending data: {e}")
             if hasattr(e, 'response') and e.response is not None:
-                print(f"Response status code: {e.response.status_code}")
-                print(f"Response text: {e.response.text}")
+                logger.error(f"Response status code: {e.response.status_code}")
+                logger.error(f"Response text: {e.response.text}")
             return None
     
     def get_connection_info(self):
@@ -108,12 +117,9 @@ if __name__ == "__main__":
         bucket="darshan-explorer"
     )
 
-    # Print connection info
-    conn_info = client.get_connection_info()
-    print(f"Sending data to: {conn_info['host']}")
-    print(f"Organization: {conn_info['org']}")
-    print(f"Bucket: {conn_info['bucket']}")
-    print(f"Timestamp: {int(time.time())}")
     
     # Send the data
-    client.send_trace_data(module="MPIO", filename="data.nc", size=678, duration=678)
+    client.send(records=[
+        {"module": "MPIO", "filename": "data.nc", "size": 678, "duration": 678, "start": int(time.time())},
+        {"module": "MPIO", "filename": "data.nc", "size": 6897, "duration": 678, "start": int(time.time())}
+    ])
