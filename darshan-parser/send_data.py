@@ -24,17 +24,17 @@ class InfluxDBClient:
         self.influx_org = influx_org 
         self.influx_token = influx_token 
         self.bucket = bucket
-    
+
     def send_trace_data(self, module : str, filename : str, size : int, duration : int):
         """
         Send trace data to InfluxDB equivalent to the curl command in send_data.sh
         
         Args:
-            module (str): Module name for the trace
-            filename (str): Filename being traced
-            size (int): File size
-            duration (int): Operation duration
-            
+            module : Module name for the trace
+            filename : Filename being traced
+            size : File size
+            duration : Operation duration
+
         Returns:
             requests.Response or None: Response object if successful, None if failed
         """
