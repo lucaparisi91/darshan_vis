@@ -32,9 +32,4 @@ class dxt_parser:
                             'end': int(float(m.group(7))*1e+3) # Convert seconds to milliseconds
                         }
                         self.records.append(record)
-                        print(record)
-
-
-if __name__ == "__main__": 
-
-    parser = dxt_parser("example_darshan_trace.txt")
+                        

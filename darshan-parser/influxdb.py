@@ -93,10 +93,10 @@ class InfluxDBClient:
             # Check the response
             response.raise_for_status()  # Raises an exception for bad status codes
 
-            logger.debug(f"Data sent successfully!")
-            logger.debug(f"Status code: {response.status_code}")
-            logger.debug(f"N records sent: {len(records)}")
-
+            logger.info(f"Data sent successfully!")
+            logger.info(f"Status code: {response.status_code}")
+            logger.info(f"N records sent: {len(records)}")
+            logger.debug(f"Data: {data}")
             return response
         
         except requests.exceptions.RequestException as e:
@@ -122,13 +122,7 @@ class InfluxDBClient:
 
 
 if __name__ == "__main__":
-    # Create InfluxDB client instance
-    client = InfluxDBClient(
-        influx_host="http://localhost:8086",
-        influx_org="epcc",
-        influx_token="JTfObNAAjma5N0tNRFxI7NZIQO3VRLNxCq7dilnHOi43TXnMDmY2RLvgStLSnJ2hUTcsl49hrsJHu5UyfCQoDQ==",
-        bucket="darshan-explorer"
-    )
+
 
 
     # Send the data
