@@ -3,6 +3,7 @@ import os
 import time
 from datetime import datetime
 import parserlogs
+from typing import List
 
 logger = parserlogs.logging.getLogger(__name__)
 
@@ -32,18 +33,17 @@ class InfluxDBClient:
         logger.info(f"Organization: {self.influx_org}")
         logger.info(f"Bucket: {self.bucket}")
 
-    def send(self, records : dict):
+    
+
+    def send(self, records : List[dict] ):
         """
         Send trace data to InfluxDB equivalent to the curl command in send_data.sh
         
         Args:
-            records : Dictionary containing trace data. Each record should contain:
-            - module : Module name for the trace
-            - filename : Filename being traced
-            - size : File size
-            - duration : Operation duration
-            - start : Start time in milliseconds since epoch
-
+            records : List of dictionaries containing trace data. Each record should contain:
+            - measurement (str): Measurement name
+            - tags (Dict): Tags associated with the measurement
+            - fields (Dict): Fields containing the measurement data
         Returns:
             requests.Response or None: Response object if successful, None if failed
         """
@@ -54,7 +54,7 @@ class InfluxDBClient:
         params = {
             'org': self.influx_org,
             'bucket': self.bucket,
-            'precision': 's'
+            'precision': 'ms'
         }
         
         # Set up headers
@@ -64,10 +64,23 @@ class InfluxDBClient:
             'Accept': 'application/json'
         }
         
+        def field_value(value):
+            """
+            Convert field value to string format for InfluxDB
+            """
+            if isinstance(value, str):
+                return f'"{value}"'
+            else:
+                return value
+
         data=""
         for record in records:
-            data += f'trace,module={record["module"]} filename="{record["filename"]}",size={record["size"]},duration={record["duration"]} {record["start"]}\n'
-        
+            measurement = record["measurement"]
+            tags = record["tags"]
+            fields = record["fields"]
+            timestamp = record["start"]  # Assuming 'start' is the timestamp in milliseconds
+            data += f'{measurement},{",".join([f"{k}={v}" for k, v in tags.items()])} {",".join([f"{k}={field_value(v)}" for k, v in fields.items()])} {timestamp}\n'
+
         try:
             # Make the POST request
             response = requests.post(
@@ -117,9 +130,9 @@ if __name__ == "__main__":
         bucket="darshan-explorer"
     )
 
-    
+
     # Send the data
     client.send(records=[
-        {"module": "MPIO", "filename": "data.nc", "size": 678, "duration": 678, "start": int(time.time())},
-        {"module": "MPIO", "filename": "data.nc", "size": 6897, "duration": 678, "start": int(time.time())}
+        {"measurement": "trace", "tags": {"module": "MPIO"}, "fields": {"size": 678, "duration": 678, "filename": "data.nc"}, "start": int(time.time())},
+        {"measurement": "trace", "tags": {"module": "MPIO"}, "fields": {"filename": "data.nc", "size": 6897, "duration": 678}, "start": int(time.time())}
     ])
