@@ -1,3 +1,6 @@
+
+
+
 # A setup to analyse darshan logs
 
 ```bash
@@ -43,4 +46,13 @@ Go to `localhost:8086` and follow the GUI instructions.
 
 ```bash
 bucket: darshan-explorer  
+```
+
+# Setup the python interface
+
+```bash
+sudo apt-get install python3.10-venv
+python3 -m venv parser_env
+python3 -m pip install -r requirements.txt
+source parser_env/bin/activate
 ```
